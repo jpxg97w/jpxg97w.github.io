@@ -48,7 +48,7 @@
         } = match;
 
         /**
-         * @type {Record<string, string | undefined>}
+         * @type {Record<string, string>}
          */
         const params = params_ ? Object.fromEntries(
           params_
@@ -60,7 +60,7 @@
               const {
                 groups: {
                   key = undefined,
-                  value = undefined,
+                  value = '',
                 } = {},
               } = paramMatch;
               if (!key) return;
@@ -91,7 +91,7 @@
 
         if (link) link.href = redirect.href;
         if (redirectDebug) {
-          redirectDebug.innerText = JSON.stringify(redirect, undefined, 2);
+          redirectDebug.innerText = JSON.stringify({ ...redirect }, undefined, 2);
         }
 
         // location.assign(redirect);
