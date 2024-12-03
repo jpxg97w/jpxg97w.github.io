@@ -4,8 +4,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
   </head>
-  <body style="display:flex;justify-content:center;align-items:center;">
-    <a id="redirect-link">click me</a>
+  <body style="display:flex;flex-direction:column;gap:3rem;justify-content:center;align-items:center;">
+    <a>click me</a>
+    <pre id="url-debug"></pre>
+    <pre id="redirect-debug"></pre>
     <script type="module">
       const parseDataUrl = new RegExp('^data:(?<type>.+?/.+?)?(?:;(?<params>.+?))?,(?<data>.*)$');
       const parseParam = new RegExp('^(?<key>.+?)(?:=(?<value>.*))?$');
@@ -13,7 +15,17 @@
       /**
        * @type {HTMLAnchorElement | null}
       */
-      const link = document.querySelector('#redirect-link');
+      const link = document.querySelector('a');
+
+      /**
+       * @type {HTMLPreElement | null}
+      */
+      const urlDebug = document.querySelector('#url-debug');
+
+      /**
+       * @type {HTMLPreElement | null}
+      */
+      const redirectDebug = document.querySelector('#redirect-debug');
 
       /**
        * @param {string | undefined} hash
@@ -62,10 +74,24 @@
         const data = data_ && isBase64 ? atob(data_) : data_;
         const blob = new Blob([data], { type });
 
+        if (urlDebug) {
+          urlDebug.innerText = JSON.stringify({
+            data,
+            hash,
+            isBase64,
+            params,
+            type,
+          }, undefined, 2);
+        }
+
         const redirect = new URL(URL.createObjectURL(blob));
         redirect.hash = new URLSearchParams(params).toString();
 
-        link.href = redirect.href;
+        if (link) link.href = redirect.href;
+        if (redirectDebug) {
+          redirectDebug.innerText = JSON.stringify(redirect, undefined, 2);
+        }
+
         // location.assign(redirect);
       };
 
