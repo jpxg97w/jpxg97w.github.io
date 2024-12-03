@@ -166,12 +166,14 @@
         readHash(hash);
       };
 
-      urlDebug?.onclick = () => {
-        isRedirectEnabled = !isRedirectEnabled;
-        localStorage.setItem('isRedirectEnabled', JSON.stringify(isRedirectEnabled));
-
-        readHash(location.hash);
-      };
+      if (urlDebug) {
+        urlDebug.onclick = () => {
+          isRedirectEnabled = !isRedirectEnabled;
+          localStorage.setItem('isRedirectEnabled', JSON.stringify(isRedirectEnabled));
+  
+          readHash(location.hash);
+        };
+      }
 
       readHash(location.hash);
     </script>
