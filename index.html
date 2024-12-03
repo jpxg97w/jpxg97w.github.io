@@ -4,12 +4,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
   </head>
-  <body style="display:flex;flex-direction:column;gap:3rem;justify-content:center;align-items:center;">
+  <body style="display:flex;flex-direction:column;gap:3rem;">
     <a>click me</a>
     <input type="text">
-    <pre id="url-debug" tabindex="0"></pre>
-    <pre id="redirect-debug"></pre>
     <button>[isRedirectEnabled]</button>
+    <pre id="url-debug" style="max-width:100vw;max-height:80vh;overflow:scroll;"></pre>
+    <pre id="redirect-debug"></pre>
 
     <script type="module">
       const parseDataUrl = new RegExp('^data:(?<type>.+?/.+?)?(?:;(?<params>.+?))?,(?<data>.*)$');
@@ -26,6 +26,11 @@
       const input = document.querySelector('input');
 
       /**
+       * @type {HTMLButtonElement | null}
+      */
+      const redirectEnableButton = document.querySelector('button');
+
+      /**
        * @type {HTMLPreElement | null}
       */
       const urlDebug = document.querySelector('#url-debug');
@@ -34,11 +39,6 @@
        * @type {HTMLPreElement | null}
       */
       const redirectDebug = document.querySelector('#redirect-debug');
-
-      /**
-       * @type {HTMLButtonElement | null}
-      */
-      const redirectEnableButton = document.querySelector('button');
 
       /**
        * @type {boolean}
@@ -86,7 +86,7 @@
         }
 
         if (redirectEnableButton) {
-          redirectEnableButton.value = `enable redirect: ${JSON.stringify(isRedirectEnabled)}`;
+          redirectEnableButton.innerText = `enable redirect: ${JSON.stringify(isRedirectEnabled)}`;
         }
 
         if (!hash) return;
