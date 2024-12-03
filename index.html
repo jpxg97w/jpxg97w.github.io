@@ -188,7 +188,7 @@
         }
 
         if (!doRedirect) return;
-        location.assign(redirect);
+        location.replace(redirect);
       };
 
       onhashchange = ({ newURL }) => {
