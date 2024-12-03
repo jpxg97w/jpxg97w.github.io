@@ -4,8 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
   </head>
-  <body style="display:flex;flex-direction:column;gap:3rem;">
-    <a>click me</a>
+  <body style="display:flex;flex-direction:column;gap:1rem;margin:2rem;align-items:flex-start;">
+    <a><h1>click me</h1></a>
     <input type="text">
     <button id="share">[share]</button>
     <button id="copy">[copy]</button>
@@ -205,6 +205,8 @@
 
           readHash(value);
         };
+
+        input.onfocus = () => input.setSelectionRange(0, Number.MAX_SAFE_INTEGER);
       }
 
       if (shareButton) {
