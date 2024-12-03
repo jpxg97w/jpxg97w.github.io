@@ -32,6 +32,23 @@
       */
       let objectUrl;
 
+      // https://stackoverflow.com/a/64752311
+      /**
+       * @param {string} input
+      */
+      const decodeBase64 = (input) => {
+        const text = atob(input);
+        const length = text.length;
+        const bytes = new Uint8Array(length);
+        for (let i = 0; i < length; i++) {
+          bytes[i] = text.charCodeAt(i);
+        }
+        // const decoder = new TextDecoder();
+        // return decoder.decode(bytes);
+
+        return bytes;
+      };
+
       /**
        * @param {string | undefined} hash
       */
@@ -85,14 +102,14 @@
         const isBase64 = Object.keys(params).includes('base64');
         const data = data_
           ? isBase64
-            ? atob(data_)
+            ? decodeBase64(data_)
             : decodeURIComponent(data_)
           : undefined;
 
         const { charset = 'US-ASCII' } = params;
         const type = `${type_};charset=${charset}`;
 
-        const blob = new Blob([data], { type });
+        const blob = data ? new Blob([data], { type }) : undefined;
 
         if (urlDebug) {
           urlDebug.innerText = JSON.stringify({
@@ -107,6 +124,8 @@
             type,
           }, undefined, 2);
         }
+
+        if (!blob) return;
 
         objectUrl = URL.createObjectURL(blob);
         const redirect = new URL(objectUrl);
