@@ -6,8 +6,11 @@
   </head>
   <body style="display:flex;flex-direction:column;gap:3rem;justify-content:center;align-items:center;">
     <a>click me</a>
+    <input type="text">
     <pre id="url-debug" tabindex="0"></pre>
     <pre id="redirect-debug"></pre>
+    <button>[isRedirectEnabled]</button>
+
     <script type="module">
       const parseDataUrl = new RegExp('^data:(?<type>.+?/.+?)?(?:;(?<params>.+?))?,(?<data>.*)$');
       const parseParam = new RegExp('^(?<key>.+?)(?:=(?<value>.*))?$');
@@ -18,6 +21,11 @@
       const link = document.querySelector('a');
 
       /**
+       * @type {HTMLInputElement | null}
+      */
+      const input = document.querySelector('input');
+
+      /**
        * @type {HTMLPreElement | null}
       */
       const urlDebug = document.querySelector('#url-debug');
@@ -26,6 +34,11 @@
        * @type {HTMLPreElement | null}
       */
       const redirectDebug = document.querySelector('#redirect-debug');
+
+      /**
+       * @type {HTMLButtonElement | null}
+      */
+      const redirectEnableButton = document.querySelector('button');
 
       /**
        * @type {boolean}
@@ -61,8 +74,9 @@
 
       /**
        * @param {string | undefined} hash
+       * @param {boolean | undefined} preventRedirect
       */
-      const readHash = (hash) => {
+      const readHash = (hash, preventRedirect = false) => {
         if (link) link.href = '';
         clearTimeout(timeout);
 
@@ -71,9 +85,13 @@
           objectUrl = undefined;
         }
 
+        if (redirectEnableButton) {
+          redirectEnableButton.value = `enable redirect: ${JSON.stringify(isRedirectEnabled)}`;
+        }
+
         if (!hash) return;
 
-        const payload = hash.slice(1);
+        const payload = hash.charAt(0) === '#' ? hash.slice(1) : hash;
         if (!payload.length) return;
 
         const match = parseDataUrl.exec(payload);
@@ -117,7 +135,7 @@
             : decodeURIComponent(data_)
           : undefined;
 
-        const { charset = 'US-ASCII' } = params;
+        const { charset = (isBase64 ? 'utf-8' : 'us-ascii') } = params;
         const type = `${type_};charset=${charset}`;
 
         const blob = data ? new Blob([data], { type }) : undefined;
@@ -132,6 +150,8 @@
             isRedirectEnabled,
             params_,
             params,
+            payload,
+            preventRedirect,
             type_,
             type,
           }, undefined, 2);
@@ -154,7 +174,7 @@
           redirectDebug.innerText = redirect.href;
         }
 
-        if (isRedirectEnabled) {
+        if (isRedirectEnabled && !preventRedirect) {
           timeout = setTimeout(() => location.assign(redirect), 1000);
         }
       };
@@ -166,8 +186,17 @@
         readHash(hash);
       };
 
-      if (urlDebug) {
-        urlDebug.onclick = () => {
+      if (input) {
+        input.oninput = () => {
+          const { value } = input;
+          if (!value.length) return;
+
+          readHash(value, true);
+        };
+      }
+
+      if (redirectEnableButton) {
+        redirectEnableButton.onclick = () => {
           isRedirectEnabled = !isRedirectEnabled;
           localStorage.setItem('isRedirectEnabled', JSON.stringify(isRedirectEnabled));
   
