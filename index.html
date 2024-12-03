@@ -5,16 +5,64 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
   </head>
   <body>
-    Read URL-hash as data-URL and redirect to Blob-URL
+    <a id="redirect-link">Read URL-hash as data-URL and redirect to Blob-URL</a>
     <script type="module">
-      import parseDataURL from 'https://unpkg.com/data-urls?module';
+      const parseDataUrl = new RegExp('^data:(?<type>.+?/.+?)?(?:;(?<params>.+?))?,(?<data>.*)$');
+      const parseParam = new RegExp('^(?<key>.+?)(?:=(?<value>.*))?$');
+
+      /**
+       * @type {HTMLAnchorElement | null}
+      */
+      const link = document.querySelector('#redirect-link');
+
       (() => {
         const { hash } = location;
+
         const payload = hash.slice(1);
         if (!payload.length) return;
-        const { body, mimeType } = parseDataURL(payload);
-        const blob = new Blob([body], { type: mimeType.toString() });
-        const redirect = URL.createObjectURL(blob);
+
+        const match = parseDataUrl.exec(payload);
+        if (!match) return;
+
+        const {
+          groups: {
+            data: data_ = undefined,
+            params: params_ = undefined,
+            type = 'text/plain',
+          } = {},
+        } = match;
+
+        /**
+         * @type {Record<string, string | undefined>}
+         */
+        const params = params_ ? Object.fromEntries(
+          params_
+            .split(';')
+            .map((param) => {
+              const paramMatch = parseDataUrl.exec(param);
+              if (!paramMatch) return;
+
+              const {
+                groups: {
+                  key = undefined,
+                  value = undefined,
+                } = {},
+              } = match;
+              if (!key) return;
+
+              return [key, value];
+            })
+            .filter(Boolean)
+        ) : {};
+
+        const isBase64 = Object.keys(params).includes('base64');
+        const data = data_ && isBase64 ? atob(data_) : data_;
+        const blob = new Blob([data], { type });
+
+        const redirect = new URL(URL.createObjectURL(blob));
+        redirect.hash = new URLSearchParams(params).toString();
+
+        link.href = redirect.href;
         location.replace(redirect);
       })();
     </script>
