@@ -83,7 +83,7 @@
         ) : {};
 
         const isBase64 = Object.keys(params).includes('base64');
-        const data = data_ && isBase64 ? atob(data_) : data_;
+        const data = data_ && isBase64 ? atob(data_) : decodeURIComponent(data_);
 
         const { charset = 'US-ASCII' } = params;
         const type = `${type_};charset=${charset}`;
