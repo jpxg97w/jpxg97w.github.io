@@ -5,11 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
   </head>
   <body>
+    <button>click</button>
     <script>
       (() => {
         const { hash } = location;
-        const redirect = hash.slice(1);
-        if (!redirect.length) return;
+        const payload = hash.slice(1);
+        if (!payload.length) return;
+        const blob = new Blob([payload], { type: 'text/html' });
+        const redirect = URL.createObjectURL(blob);
         location.replace(redirect);
       })();
     </script>
