@@ -6,12 +6,14 @@
   </head>
   <body>
     <button>click</button>
-    <script>
+    <script type="module">
+      import parseDataURL from 'https://unpkg.com/data-urls?module';
       (() => {
         const { hash } = location;
         const payload = hash.slice(1);
         if (!payload.length) return;
-        const blob = new Blob([payload], { type: 'text/html' });
+        const { body, mimeType } = parseDataURL(payload);
+        const blob = new Blob([body], { type: mimeType.toString() });
         const redirect = URL.createObjectURL(blob);
         location.replace(redirect);
       })();
