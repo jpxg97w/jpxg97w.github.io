@@ -28,9 +28,21 @@
       const redirectDebug = document.querySelector('#redirect-debug');
 
       /**
+       * @type {string | undefined}
+      */
+      let objectUrl;
+
+      /**
        * @param {string | undefined} hash
       */
       const readHash = (hash) => {
+        if (link) link.href = '';
+
+        if (objectUrl) {
+          URL.revokeObjectURL(objectUrl);
+          objectUrl = undefined;
+        }
+
         if (!hash) return;
 
         const payload = hash.slice(1);
@@ -92,7 +104,8 @@
           }, undefined, 2);
         }
 
-        const redirect = new URL(URL.createObjectURL(blob));
+        objectUrl = URL.createObjectURL(blob);
+        const redirect = new URL(objectUrl);
         redirect.hash = new URLSearchParams(params).toString();
 
         if (link) link.href = redirect.href;
