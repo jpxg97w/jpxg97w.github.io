@@ -54,7 +54,7 @@
           params_
             .split(';')
             .map((param) => {
-              const paramMatch = parseDataUrl.exec(param);
+              const paramMatch = parseParam.exec(param);
               if (!paramMatch) return;
 
               const {
