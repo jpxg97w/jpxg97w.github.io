@@ -17,6 +17,10 @@
       const parseDataUrl = new RegExp('^data:(?<type>.+?/.+?)?(?:;(?<params>.+?))?,(?<data>.*)$');
       const parseParam = new RegExp('^(?<key>.+?)(?:=(?<value>.*))?$');
 
+      const urlQuery = new URLSearchParams(location.search);
+      const initialRedirect = !urlQuery.has('noredirect');
+      const showData = urlQuery.has('showdata');
+
       /**
        * @type {HTMLAnchorElement | null}
       */
@@ -161,7 +165,7 @@
           }, undefined, 2);
         }
         
-        if (dataDebug) {
+        if (dataDebug && showData) {
           dataDebug.innerText = JSON.stringify({
             data_,
             data,
@@ -229,7 +233,7 @@
         };
       }
 
-      readHash(location.hash, !(new URLSearchParams(location.search).has('noredirect')));
+      readHash(location.hash, initialRedirect);
     </script>
   </body>
 </html>
