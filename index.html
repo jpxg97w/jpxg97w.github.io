@@ -8,7 +8,8 @@
     <a>click me</a>
     <input type="text">
     <button>[isRedirectEnabled]</button>
-    <pre id="url-debug" style="max-width:100vw;max-height:80vh;overflow:scroll;"></pre>
+    <pre id="hash-debug" style="max-width:80vw;overflow:scroll;"></pre>
+    <pre id="data-debug" style="max-width:80vw;max-height:40vh;overflow:scroll;"></pre>
     <pre id="redirect-debug"></pre>
 
     <script type="module">
@@ -33,7 +34,12 @@
       /**
        * @type {HTMLPreElement | null}
       */
-      const urlDebug = document.querySelector('#url-debug');
+      const hashDebug = document.querySelector('#hash-debug');
+
+      /**
+       * @type {HTMLPreElement | null}
+      */
+      const dataDebug = document.querySelector('#data-debug');
 
       /**
        * @type {HTMLPreElement | null}
@@ -140,20 +146,25 @@
 
         const blob = data ? new Blob([data], { type }) : undefined;
 
-        if (urlDebug) {
-          urlDebug.innerText = JSON.stringify({
+        if (hashDebug) {
+          hashDebug.innerText = JSON.stringify({
             charset,
-            data_,
-            data,
-            hash,
             isBase64,
             isRedirectEnabled,
             params_,
             params,
-            payload,
             preventRedirect,
             type_,
             type,
+          }, undefined, 2);
+        }
+        
+        if (dataDebug) {
+          dataDebug.innerText = JSON.stringify({
+            data_,
+            data,
+            hash,
+            payload,
           }, undefined, 2);
         }
 
