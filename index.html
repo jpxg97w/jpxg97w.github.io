@@ -129,7 +129,13 @@
 
         objectUrl = URL.createObjectURL(blob);
         const redirect = new URL(objectUrl);
-        redirect.hash = new URLSearchParams(params).toString();
+
+        const redirectParams = new URLSearchParams();
+        for (const [key, value] of Object.entries(params)) {
+          redirectParams.set(key, value ?? '');
+        }
+        redirectParams.sort();
+        redirect.hash = redirectParams.toString();
 
         if (link) link.href = redirect.href;
         if (redirectDebug) {
