@@ -43,12 +43,12 @@
           groups: {
             data: data_ = undefined,
             params: params_ = undefined,
-            type = 'text/plain',
+            type: type_ = 'text/plain',
           } = {},
         } = match;
 
         /**
-         * @type {Record<string, string>}
+         * @type {Record<string, string | undefined>}
          */
         const params = params_ ? Object.fromEntries(
           params_
@@ -60,7 +60,7 @@
               const {
                 groups: {
                   key = undefined,
-                  value = '',
+                  value = undefined,
                 } = {},
               } = paramMatch;
               if (!key) return;
@@ -72,16 +72,22 @@
 
         const isBase64 = Object.keys(params).includes('base64');
         const data = data_ && isBase64 ? atob(data_) : data_;
+
+        const { charset = 'US-ASCII' } = params;
+        const type = `${type_};charset=${charset}`;
+
         const blob = new Blob([data], { type });
 
         if (urlDebug) {
           urlDebug.innerText = JSON.stringify({
+            charset,
             data_,
             data,
             hash,
             isBase64,
             params_,
             params,
+            type_,
             type,
           }, undefined, 2);
         }
@@ -91,7 +97,7 @@
 
         if (link) link.href = redirect.href;
         if (redirectDebug) {
-          redirectDebug.innerText = JSON.stringify({ ...redirect }, undefined, 2);
+          redirectDebug.innerText = redirect.href;
         }
 
         // location.assign(redirect);
