@@ -4,8 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
   </head>
-  <body>
-    <a id="redirect-link">Read URL-hash as data-URL and redirect to Blob-URL</a>
+  <body style="display:flex;justify-content:center;align-items:center;">
+    <a id="redirect-link">click me</a>
     <script type="module">
       const parseDataUrl = new RegExp('^data:(?<type>.+?/.+?)?(?:;(?<params>.+?))?,(?<data>.*)$');
       const parseParam = new RegExp('^(?<key>.+?)(?:=(?<value>.*))?$');
@@ -15,8 +15,11 @@
       */
       const link = document.querySelector('#redirect-link');
 
-      (() => {
-        const { hash } = location;
+      /**
+       * @param {string | undefined} hash
+      */
+      const readHash = (hash) => {
+        if (!hash) return;
 
         const payload = hash.slice(1);
         if (!payload.length) return;
@@ -63,8 +66,17 @@
         redirect.hash = new URLSearchParams(params).toString();
 
         link.href = redirect.href;
-        location.assign(redirect);
-      })();
+        // location.assign(redirect);
+      };
+
+      onhashchange = ({ newURL }) => {
+        if (!URL.canParse(newURL)) return;
+
+        const { hash } = new URL(newURL);
+        readHash(hash);
+      };
+
+      readHash(location.hash);
     </script>
   </body>
 </html>
