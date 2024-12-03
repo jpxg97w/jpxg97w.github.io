@@ -6,7 +6,7 @@
   </head>
   <body style="display:flex;flex-direction:column;gap:3rem;justify-content:center;align-items:center;">
     <a>click me</a>
-    <pre id="url-debug"></pre>
+    <pre id="url-debug" tabindex="0"></pre>
     <pre id="redirect-debug"></pre>
     <script type="module">
       const parseDataUrl = new RegExp('^data:(?<type>.+?/.+?)?(?:;(?<params>.+?))?,(?<data>.*)$');
@@ -26,6 +26,16 @@
        * @type {HTMLPreElement | null}
       */
       const redirectDebug = document.querySelector('#redirect-debug');
+
+      /**
+       * @type {boolean}
+      */
+      let isRedirectEnabled = JSON.parse(localStorage.getItem('isRedirectEnabled') ?? 'true');
+
+      /**
+       * @type {number | undefined}
+      */
+      let timeout;
 
       /**
        * @type {string | undefined}
@@ -54,6 +64,7 @@
       */
       const readHash = (hash) => {
         if (link) link.href = '';
+        clearTimeout(timeout);
 
         if (objectUrl) {
           URL.revokeObjectURL(objectUrl);
@@ -118,6 +129,7 @@
             data,
             hash,
             isBase64,
+            isRedirectEnabled,
             params_,
             params,
             type_,
@@ -142,7 +154,9 @@
           redirectDebug.innerText = redirect.href;
         }
 
-        // location.assign(redirect);
+        if (isRedirectEnabled) {
+          timeout = setTimeout(() => location.assign(redirect), 1000);
+        }
       };
 
       onhashchange = ({ newURL }) => {
@@ -151,6 +165,13 @@
         const { hash } = new URL(newURL);
         readHash(hash);
       };
+
+      urlDebug?.onclick = () => {
+        isRedirectEnabled = !isRedirectEnabled;
+        localStorage.setItem('isRedirectEnabled', JSON.stringify(isRedirectEnabled));
+
+        readHash(location.hash);
+      }
 
       readHash(location.hash);
     </script>
