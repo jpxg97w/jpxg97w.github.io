@@ -7,10 +7,10 @@
   <body style="display:flex;flex-direction:column;gap:3rem;">
     <a>click me</a>
     <input type="text">
-    <button>[isRedirectEnabled]</button>
+    <button>[share]</button>
     <pre id="hash-debug" style="max-width:80vw;overflow:scroll;"></pre>
     <pre id="data-debug" style="max-width:80vw;max-height:40vh;overflow:scroll;"></pre>
-    <pre id="redirect-debug"></pre>
+    <pre id="redirect-debug" style="max-width:80vw;overflow:scroll;"></pre>
 
     <script type="module">
       const parseDataUrl = new RegExp('^data:(?<type>.+?/.+?)?(?:;(?<params>.+?))?,(?<data>.*)$');
@@ -29,7 +29,7 @@
       /**
        * @type {HTMLButtonElement | null}
       */
-      const redirectEnableButton = document.querySelector('button');
+      const shareButton = document.querySelector('button');
 
       /**
        * @type {HTMLPreElement | null}
@@ -47,14 +47,14 @@
       const redirectDebug = document.querySelector('#redirect-debug');
 
       /**
-       * @type {boolean}
-      */
-      let isRedirectEnabled = JSON.parse(localStorage.getItem('isRedirectEnabled') ?? 'true');
-
-      /**
        * @type {number | undefined}
       */
       let timeout;
+
+      /**
+       * @type {string | undefined}
+      */
+      let shareUrl;
 
       /**
        * @type {string | undefined}
@@ -80,9 +80,9 @@
 
       /**
        * @param {string | undefined} hash
-       * @param {boolean | undefined} preventRedirect
+       * @param {boolean | undefined} doRedirect
       */
-      const readHash = (hash, preventRedirect = false) => {
+      const readHash = (hash, doRedirect = false) => {
         if (link) link.href = '';
         clearTimeout(timeout);
 
@@ -91,14 +91,17 @@
           objectUrl = undefined;
         }
 
-        if (redirectEnableButton) {
-          redirectEnableButton.innerText = `enable redirect: ${JSON.stringify(isRedirectEnabled)}`;
-        }
-
         if (!hash) return;
 
         const payload = hash.charAt(0) === '#' ? hash.slice(1) : hash;
         if (!payload.length) return;
+
+        shareUrl = (() => {
+          const url_ = new URL('/', location.href);
+          url_.hash = payload;
+
+          return url_.href;
+        })();
 
         const match = parseDataUrl.exec(payload);
         if (!match) return;
@@ -149,11 +152,10 @@
         if (hashDebug) {
           hashDebug.innerText = JSON.stringify({
             charset,
+            doRedirect,
             isBase64,
-            isRedirectEnabled,
             params_,
             params,
-            preventRedirect,
             type_,
             type,
           }, undefined, 2);
@@ -185,9 +187,8 @@
           redirectDebug.innerText = redirect.href;
         }
 
-        if (isRedirectEnabled && !preventRedirect) {
-          timeout = setTimeout(() => location.assign(redirect), 3000);
-        }
+        if (!doRedirect) return;
+        timeout = setTimeout(() => location.assign(redirect), 2000);
       };
 
       onhashchange = ({ newURL }) => {
@@ -202,20 +203,19 @@
           const { value } = input;
           if (!value.length) return;
 
-          readHash(value, true);
+          readHash(value);
         };
       }
 
-      if (redirectEnableButton) {
-        redirectEnableButton.onclick = () => {
-          isRedirectEnabled = !isRedirectEnabled;
-          localStorage.setItem('isRedirectEnabled', JSON.stringify(isRedirectEnabled));
-  
-          readHash(location.hash);
-        };
+      if (shareButton) {
+        shareButton.onclick = () => {
+          if (!shareUrl) return;
+
+          navigator.share({ url: shareUrl });
+        }
       }
 
-      readHash(location.hash);
+      readHash(location.hash, !(new URLSearchParams(location.search).has('noredirect')));
     </script>
   </body>
 </html>
