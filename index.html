@@ -63,7 +63,7 @@
         redirect.hash = new URLSearchParams(params).toString();
 
         link.href = redirect.href;
-        location.replace(redirect);
+        location.assign(redirect);
       })();
     </script>
   </body>
