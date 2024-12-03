@@ -7,7 +7,8 @@
   <body style="display:flex;flex-direction:column;gap:3rem;">
     <a>click me</a>
     <input type="text">
-    <button>[share]</button>
+    <button id="share">[share]</button>
+    <button id="copy">[copy]</button>
     <pre id="hash-debug" style="max-width:80vw;overflow:scroll;"></pre>
     <pre id="data-debug" style="max-width:80vw;max-height:40vh;overflow:scroll;"></pre>
     <pre id="redirect-debug" style="max-width:80vw;overflow:scroll;"></pre>
@@ -29,7 +30,12 @@
       /**
        * @type {HTMLButtonElement | null}
       */
-      const shareButton = document.querySelector('button');
+      const shareButton = document.querySelector('#share');
+      
+      /**
+       * @type {HTMLButtonElement | null}
+      */
+      const copyButton = document.querySelector('#copy');
 
       /**
        * @type {HTMLPreElement | null}
@@ -45,11 +51,6 @@
        * @type {HTMLPreElement | null}
       */
       const redirectDebug = document.querySelector('#redirect-debug');
-
-      /**
-       * @type {number | undefined}
-      */
-      let timeout;
 
       /**
        * @type {string | undefined}
@@ -84,7 +85,6 @@
       */
       const readHash = (hash, doRedirect = false) => {
         if (link) link.href = '';
-        clearTimeout(timeout);
 
         if (objectUrl) {
           URL.revokeObjectURL(objectUrl);
@@ -188,7 +188,7 @@
         }
 
         if (!doRedirect) return;
-        timeout = setTimeout(() => location.assign(redirect), 2000);
+        location.assign(redirect);
       };
 
       onhashchange = ({ newURL }) => {
@@ -211,8 +211,20 @@
         shareButton.onclick = () => {
           if (!shareUrl) return;
 
-          navigator.share({ url: shareUrl });
-        }
+          try {
+            navigator.share({ url: shareUrl });
+          } catch {}
+        };
+      }
+
+      if (copyButton) {
+        copyButton.onclick = () => {
+          if (!shareUrl) return;
+
+          try {
+            navigator.clipboard.writeText(shareUrl);
+          } catch {}
+        };
       }
 
       readHash(location.hash, !(new URLSearchParams(location.search).has('noredirect')));
