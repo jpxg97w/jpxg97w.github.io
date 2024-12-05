@@ -1,0 +1,159 @@
+<html>
+  <head>
+    <title>Debug Data-URL</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  </head>
+  <body style="display:flex;flex-direction:column;gap:1rem;margin:2rem;align-items:flex-start;">
+    <a><h1>click me</h1></a>
+    <pre id="hash-debug" style="max-width:80vw;overflow:scroll;"></pre>
+    <pre id="data-debug" style="max-width:80vw;max-height:40vh;overflow:scroll;"></pre>
+    <pre id="redirect-debug" style="max-width:80vw;overflow:scroll;"></pre>
+
+    <script type="module">
+      const parseDataUrl = new RegExp('^data:(?<type>.+?/.+?)?(?:;(?<params>.+?))?,(?<data>.*)$');
+      const parseParam = new RegExp('^(?<key>.+?)(?:=(?<value>.*))?$');
+
+      const urlQuery = new URLSearchParams(location.search);
+      const showData = urlQuery.has('showdata');
+
+      /**
+       * @type {HTMLAnchorElement | null}
+      */
+      const link = document.querySelector('a');
+
+      /**
+       * @type {HTMLPreElement | null}
+      */
+      const hashDebug = document.querySelector('#hash-debug');
+
+      /**
+       * @type {HTMLPreElement | null}
+      */
+      const dataDebug = document.querySelector('#data-debug');
+
+      /**
+       * @type {HTMLPreElement | null}
+      */
+      const redirectDebug = document.querySelector('#redirect-debug');
+
+      /**
+       * @type {string | undefined}
+      */
+      let objectUrl;
+
+      // https://stackoverflow.com/a/64752311
+      /**
+       * @param {string} input
+      */
+      const decodeBase64 = (input) => {
+        const text = atob(input);
+        const length = text.length;
+        const bytes = new Uint8Array(length);
+        for (let i = 0; i < length; i++) {
+          bytes[i] = text.charCodeAt(i);
+        }
+        // const decoder = new TextDecoder();
+        // return decoder.decode(bytes);
+
+        return bytes;
+      };
+
+      /**
+       * @param {string | undefined} hash
+      */
+      const readHash = (hash) => {
+        if (link) link.href = '';
+
+        if (objectUrl) {
+          URL.revokeObjectURL(objectUrl);
+          objectUrl = undefined;
+        }
+
+        if (!hash) return;
+
+        const payload = hash.charAt(0) === '#' ? hash.slice(1) : hash;
+        if (!payload.length) return;
+
+        const match = parseDataUrl.exec(payload);
+        if (!match) return;
+
+        const {
+          groups: {
+            data: data_ = undefined,
+            params: params_ = undefined,
+            type: type_ = 'text/plain',
+          } = {},
+        } = match;
+
+        /**
+         * @type {Record<string, string | undefined>}
+         */
+        const params = params_ ? Object.fromEntries(
+          params_
+            .split(';')
+            .map((param) => {
+              const paramMatch = parseParam.exec(param);
+              if (!paramMatch) return;
+
+              const {
+                groups: {
+                  key = undefined,
+                  value = undefined,
+                } = {},
+              } = paramMatch;
+              if (!key) return;
+
+              return [key, value];
+            })
+            .filter(Boolean)
+        ) : {};
+
+        const isBase64 = Object.keys(params).includes('base64');
+        const data = data_
+          ? isBase64
+            ? decodeBase64(data_)
+            : decodeURIComponent(data_)
+          : undefined;
+
+        const { charset = (isBase64 ? 'utf-8' : 'us-ascii') } = params;
+        const type = `${type_};charset=${charset}`;
+
+        const blob = data ? new Blob([data], { type }) : undefined;
+
+        if (hashDebug) {
+          hashDebug.innerText = JSON.stringify({
+            charset,
+            doRedirect,
+            isBase64,
+            params_,
+            params,
+            type_,
+            type,
+          }, undefined, 2);
+        }
+        
+        if (dataDebug && showData) {
+          dataDebug.innerText = JSON.stringify({
+            data_,
+            data,
+            hash,
+            payload,
+          }, undefined, 2);
+        }
+
+        if (!blob) return;
+
+        objectUrl = URL.createObjectURL(blob);
+        const redirect = new URL(objectUrl);
+
+        if (link) link.href = redirect.href;
+        if (redirectDebug) {
+          redirectDebug.innerText = redirect.href;
+        }
+      };
+
+      readHash(location.hash);
+    </script>
+  </body>
+</html>

@@ -1,65 +1,19 @@
 <html>
   <head>
-    <title>Redirect to Blob</title>
+    <title>Redirect Data-URL to Blob</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
   </head>
   <body style="display:flex;flex-direction:column;gap:1rem;margin:2rem;align-items:flex-start;">
     <a><h1>click me</h1></a>
-    <input placeholder="data:text/plain;charset=…" type="text">
-    <button id="share">[share]</button>
-    <button id="copy">[copy]</button>
-    <pre id="hash-debug" style="max-width:80vw;overflow:scroll;"></pre>
-    <pre id="data-debug" style="max-width:80vw;max-height:40vh;overflow:scroll;"></pre>
-    <pre id="redirect-debug" style="max-width:80vw;overflow:scroll;"></pre>
-
     <script type="module">
       const parseDataUrl = new RegExp('^data:(?<type>.+?/.+?)?(?:;(?<params>.+?))?,(?<data>.*)$');
       const parseParam = new RegExp('^(?<key>.+?)(?:=(?<value>.*))?$');
-
-      const urlQuery = new URLSearchParams(location.search);
-      const initialRedirect = !urlQuery.has('noredirect');
-      const showData = urlQuery.has('showdata');
 
       /**
        * @type {HTMLAnchorElement | null}
       */
       const link = document.querySelector('a');
-
-      /**
-       * @type {HTMLInputElement | null}
-      */
-      const input = document.querySelector('input');
-
-      /**
-       * @type {HTMLButtonElement | null}
-      */
-      const shareButton = document.querySelector('#share');
-      
-      /**
-       * @type {HTMLButtonElement | null}
-      */
-      const copyButton = document.querySelector('#copy');
-
-      /**
-       * @type {HTMLPreElement | null}
-      */
-      const hashDebug = document.querySelector('#hash-debug');
-
-      /**
-       * @type {HTMLPreElement | null}
-      */
-      const dataDebug = document.querySelector('#data-debug');
-
-      /**
-       * @type {HTMLPreElement | null}
-      */
-      const redirectDebug = document.querySelector('#redirect-debug');
-
-      /**
-       * @type {string | undefined}
-      */
-      let shareUrl;
 
       /**
        * @type {string | undefined}
@@ -87,7 +41,7 @@
        * @param {string | undefined} hash
        * @param {boolean | undefined} doRedirect
       */
-      const readHash = (hash, doRedirect = false) => {
+      const readHash = (hash) => {
         if (link) link.href = '';
 
         if (objectUrl) {
@@ -99,13 +53,6 @@
 
         const payload = hash.charAt(0) === '#' ? hash.slice(1) : hash;
         if (!payload.length) return;
-
-        shareUrl = (() => {
-          const url_ = new URL('/', location.href);
-          url_.hash = payload;
-
-          return url_.href;
-        })();
 
         const match = parseDataUrl.exec(payload);
         if (!match) return;
@@ -153,87 +100,16 @@
 
         const blob = data ? new Blob([data], { type }) : undefined;
 
-        if (hashDebug) {
-          hashDebug.innerText = JSON.stringify({
-            charset,
-            doRedirect,
-            isBase64,
-            params_,
-            params,
-            type_,
-            type,
-          }, undefined, 2);
-        }
-        
-        if (dataDebug && showData) {
-          dataDebug.innerText = JSON.stringify({
-            data_,
-            data,
-            hash,
-            payload,
-          }, undefined, 2);
-        }
-
         if (!blob) return;
 
         objectUrl = URL.createObjectURL(blob);
         const redirect = new URL(objectUrl);
 
-        const redirectParams = new URLSearchParams();
-        for (const [key, value] of Object.entries(params)) {
-          redirectParams.set(key, value ?? '');
-        }
-        redirectParams.sort();
-        redirect.hash = redirectParams.toString();
-
         if (link) link.href = redirect.href;
-        if (redirectDebug) {
-          redirectDebug.innerText = redirect.href;
-        }
-
-        if (!doRedirect) return;
         location.replace(redirect);
       };
 
-      onhashchange = ({ newURL }) => {
-        if (!URL.canParse(newURL)) return;
-
-        const { hash } = new URL(newURL);
-        readHash(hash);
-      };
-
-      if (input) {
-        input.oninput = () => {
-          const { value } = input;
-          if (!value.length) return;
-
-          readHash(value);
-        };
-
-        input.onfocus = () => input.setSelectionRange(0, Number.MAX_SAFE_INTEGER);
-      }
-
-      if (shareButton) {
-        shareButton.onclick = () => {
-          if (!shareUrl) return;
-
-          try {
-            navigator.share({ url: shareUrl });
-          } catch {}
-        };
-      }
-
-      if (copyButton) {
-        copyButton.onclick = () => {
-          if (!shareUrl) return;
-
-          try {
-            navigator.clipboard.writeText(shareUrl);
-          } catch {}
-        };
-      }
-
-      readHash(location.hash, initialRedirect);
+      readHash(location.hash);
     </script>
   </body>
 </html>
